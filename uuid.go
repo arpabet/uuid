@@ -151,6 +151,14 @@ func CreateUUID(mostSigBits, leastSigBits int64) (uuid UUID) {
 }
 
 /**
+Gets data from struct
+*/
+
+func (this UUID) GetBytes() (uint64, uint64) {
+	return this.mostSigBits, this.leastSigBits
+}
+
+/**
 Gets most significant bits as long
 */
 
