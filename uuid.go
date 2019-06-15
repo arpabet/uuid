@@ -151,6 +151,14 @@ func CreateUUID(mostSigBits, leastSigBits int64) (uuid UUID) {
 }
 
 /**
+Creates UUID from the specific most and least sig bits
+*/
+
+func SetUUID(mostSigBits, leastSigBits uint64) UUID {
+	return UUID{mostSigBits, leastSigBits}
+}
+
+/**
 Gets data from struct
 */
 
