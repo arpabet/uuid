@@ -41,8 +41,8 @@ UUID represented as two 64-bit unsigned longs in the similar way like in Java
 */
 
 type UUID struct {
-	mostSigBits  uint64
-	leastSigBits uint64
+	MostSigBits  uint64
+	LeastSigBits uint64
 }
 
 /**
@@ -109,7 +109,7 @@ Compare two required values of UUID
 */
 
 func (this UUID) Equal(other UUID) bool {
-	return this.mostSigBits == other.mostSigBits && this.leastSigBits == other.leastSigBits
+	return this.MostSigBits == other.MostSigBits && this.LeastSigBits == other.LeastSigBits
 }
 
 /**
@@ -135,67 +135,9 @@ Creates new UUID for the specific version
 */
 
 func NewUUID(version Version) (uuid UUID) {
-	uuid.mostSigBits = uint64(version) << 12
-	uuid.leastSigBits = variantIETFBits
+	uuid.MostSigBits = uint64(version) << 12
+	uuid.LeastSigBits = variantIETFBits
 	return uuid
-}
-
-/**
-Creates UUID from the specific most and least sig bits
-*/
-
-func CreateUUID(mostSigBits, leastSigBits int64) (uuid UUID) {
-	uuid.mostSigBits = uint64(mostSigBits)
-	uuid.leastSigBits = uint64(leastSigBits)
-	return uuid
-}
-
-/**
-Creates UUID from the specific most and least sig bits
-*/
-
-func SetUUID(mostSigBits, leastSigBits uint64) UUID {
-	return UUID{mostSigBits, leastSigBits}
-}
-
-/**
-Gets data from struct
-*/
-
-func (this UUID) GetBytes() (uint64, uint64) {
-	return this.mostSigBits, this.leastSigBits
-}
-
-/**
-Gets most significant bits as long
-*/
-
-func (this UUID) MostSignificantBits() int64 {
-	return int64(this.mostSigBits)
-}
-
-/**
-Sets most significant bits from long
-*/
-
-func (this *UUID) SetMostSignificantBits(mostSigBits int64) {
-	this.mostSigBits = uint64(mostSigBits)
-}
-
-/**
-Gets least significant bits as long
-*/
-
-func (this UUID) LeastSignificantBits() int64 {
-	return int64(this.leastSigBits)
-}
-
-/**
-Sets least significant bits from long
-*/
-
-func (this *UUID) SetLeastSignificantBits(leastSigBits int64) {
-	this.leastSigBits = uint64(leastSigBits)
 }
 
 /**
@@ -221,8 +163,8 @@ func (this UUID) MarshalBinaryTo(dst []byte) error {
 		return ErrorWrongLen
 	}
 
-	binary.BigEndian.PutUint64(dst, this.mostSigBits)
-	binary.BigEndian.PutUint64(dst[8:], this.leastSigBits)
+	binary.BigEndian.PutUint64(dst, this.MostSigBits)
+	binary.BigEndian.PutUint64(dst[8:], this.LeastSigBits)
 
 	return nil
 }
@@ -239,8 +181,8 @@ func (this *UUID) UnmarshalBinary(data []byte) error {
 		return ErrorWrongLen
 	}
 
-	this.mostSigBits = binary.BigEndian.Uint64(data)
-	this.leastSigBits = binary.BigEndian.Uint64(data[8:])
+	this.MostSigBits = binary.BigEndian.Uint64(data)
+	this.LeastSigBits = binary.BigEndian.Uint64(data[8:])
 
 	return nil
 }
@@ -275,19 +217,19 @@ func (this UUID) MarshalSortableBinaryTo(dst []byte) error {
 		return ErrorWrongLen
 	}
 
-	versionAndTimeHigh := uint16(this.mostSigBits)
+	versionAndTimeHigh := uint16(this.MostSigBits)
 
 	if versionAndTimeHigh&0xF000 != 0x1000 {
 		return ErrorRequiredTimebasedUUID
 	}
 
-	timeMid := uint16(this.mostSigBits >> 16)
-	timeLow := uint32(this.mostSigBits >> 32)
+	timeMid := uint16(this.MostSigBits >> 16)
+	timeLow := uint32(this.MostSigBits >> 32)
 
 	binary.BigEndian.PutUint16(dst, versionAndTimeHigh)
 	binary.BigEndian.PutUint16(dst[2:], timeMid)
 	binary.BigEndian.PutUint32(dst[4:], timeLow)
-	binary.BigEndian.PutUint64(dst[8:], this.leastSigBits^flipSignedBits)
+	binary.BigEndian.PutUint64(dst[8:], this.LeastSigBits^flipSignedBits)
 
 	return nil
 }
@@ -321,8 +263,8 @@ func (this *UUID) UnmarshalSortableBinary(data []byte) error {
 	timeMid := uint64(binary.BigEndian.Uint16(data[2:]))
 	timeLow := uint64(binary.BigEndian.Uint32(data[4:]))
 
-	this.mostSigBits = (timeLow << 32) | (timeMid << 16) | versionAndTimeHigh
-	this.leastSigBits = binary.BigEndian.Uint64(data[8:]) ^ flipSignedBits
+	this.MostSigBits = (timeLow << 32) | (timeMid << 16) | versionAndTimeHigh
+	this.LeastSigBits = binary.BigEndian.Uint64(data[8:]) ^ flipSignedBits
 
 	return nil
 }
@@ -399,7 +341,7 @@ func (this *UUID) SetName(name []byte, version Version) error {
 
 func (this UUID) Version() Version {
 
-	version := int((this.mostSigBits & versionMask) >> 12)
+	version := int((this.MostSigBits & versionMask) >> 12)
 
 	if version >= int(UnknownVersion) {
 		return UnknownVersion
@@ -414,7 +356,7 @@ Gets variant of the UUID
 
 func (this UUID) Variant() Variant {
 
-	variant := int((this.leastSigBits >> 56) & 0xFF)
+	variant := int((this.LeastSigBits >> 56) & 0xFF)
 
 	// This field is composed of a varying number of bits.
 	// 0    x    x   x   Reserved for NCS backward compatibility
@@ -458,9 +400,9 @@ func (this UUID) Time100Nanos() int64 {
 
 func (this UUID) Time100NanosUnsigned() uint64 {
 
-	timeHigh := this.mostSigBits & 0x0FFF
-	timeMid := (this.mostSigBits >> 16) & 0xFFFF
-	timeLow := (this.mostSigBits >> 32) & 0xFFFFFFFF
+	timeHigh := this.MostSigBits & 0x0FFF
+	timeMid := (this.MostSigBits >> 16) & 0xFFFF
+	timeLow := (this.MostSigBits >> 32) & 0xFFFFFFFF
 
 	return (timeHigh << 48) | (timeMid << 32) | timeLow
 }
@@ -490,7 +432,7 @@ func (this *UUID) SetTime100NanosUnsigned(time100Nanos uint64) {
 	// timeHigh
 	bits |= (time100Nanos & 0xFFF000000000000) >> 48
 
-	this.mostSigBits = bits
+	this.MostSigBits = bits
 
 }
 
@@ -499,7 +441,7 @@ Sets minimum possible 60-bit time value
 */
 
 func (this *UUID) SetMinTime() {
-	this.mostSigBits = timebasedVersionBits
+	this.MostSigBits = timebasedVersionBits
 }
 
 /**
@@ -507,7 +449,7 @@ Sets maximum possible 60-bit time value
 */
 
 func (this *UUID) SetMaxTime() {
-	this.mostSigBits = timebasedVersionBits | maxTimeBits
+	this.MostSigBits = timebasedVersionBits | maxTimeBits
 }
 
 /**
@@ -580,7 +522,7 @@ func (this *UUID) SetTime(t time.Time) {
 */
 
 func (this UUID) ClockSequence() int {
-	variantAndSequence := this.leastSigBits >> 48
+	variantAndSequence := this.LeastSigBits >> 48
 	return int(variantAndSequence) & clockSequenceBits
 }
 
@@ -594,7 +536,7 @@ func (this UUID) ClockSequence() int {
 
 func (this *UUID) SetClockSequence(clockSequence int) {
 	sanitizedSequence := uint64(clockSequence & clockSequenceBits)
-	this.leastSigBits = (this.leastSigBits & clockSequenceClearMask) | (sanitizedSequence << 48)
+	this.LeastSigBits = (this.LeastSigBits & clockSequenceClearMask) | (sanitizedSequence << 48)
 }
 
 /**
@@ -608,7 +550,7 @@ func (this *UUID) SetClockSequence(clockSequence int) {
 */
 
 func (this UUID) Node() int64 {
-	return int64(this.leastSigBits) & nodeMask
+	return int64(this.LeastSigBits) & nodeMask
 }
 
 /**
@@ -621,7 +563,7 @@ func (this UUID) Node() int64 {
 
 func (this *UUID) SetNode(node int64) {
 	sanitizedNode := uint64(node & nodeMask)
-	this.leastSigBits = (this.leastSigBits & nodeClearMask) | sanitizedNode
+	this.LeastSigBits = (this.LeastSigBits & nodeClearMask) | sanitizedNode
 }
 
 /**
@@ -645,7 +587,7 @@ func (this UUID) Counter() int64 {
 */
 
 func (this UUID) CounterUnsigned() uint64 {
-	return (this.leastSigBits ^ flipSignedBits) & counterMask
+	return (this.LeastSigBits ^ flipSignedBits) & counterMask
 }
 
 /**
@@ -674,7 +616,7 @@ func (this *UUID) SetCounter(counter int64) int64 {
 
 func (this *UUID) SetCounterUnsigned(counter uint64) uint64 {
 	sanitizedCounter := counter & counterMask
-	this.leastSigBits = (sanitizedCounter | variantIETFBits) ^ flipSignedBits
+	this.LeastSigBits = (sanitizedCounter | variantIETFBits) ^ flipSignedBits
 	return sanitizedCounter
 }
 
@@ -685,7 +627,7 @@ func (this *UUID) SetCounterUnsigned(counter uint64) uint64 {
 */
 
 func (this *UUID) SetMinCounter() {
-	this.leastSigBits = minCounterBits | variantIETFBits
+	this.LeastSigBits = minCounterBits | variantIETFBits
 }
 
 /**
@@ -695,7 +637,7 @@ func (this *UUID) SetMinCounter() {
 */
 
 func (this *UUID) SetMaxCounter() {
-	this.leastSigBits = maxCounterBits | variantIETFBits
+	this.LeastSigBits = maxCounterBits | variantIETFBits
 }
 
 /**

@@ -85,15 +85,15 @@ func testTimebasedNamedUUID(t *testing.T) {
 
 	assert.Equal(t, IETF, uuid.Variant())
 	assert.Equal(t, NamebasedVer5, uuid.Version())
-	assert.Equal(t, uint64(0x40f06fd77405247), uuid.mostSigBits)
-	assert.Equal(t, uint64(0x8d450774f5ba30c5), uuid.leastSigBits)
+	assert.Equal(t, uint64(0x40f06fd77405247), uuid.MostSigBits)
+	assert.Equal(t, uint64(0x8d450774f5ba30c5), uuid.LeastSigBits)
 
 	uuid.SetUnixTimeMillis(0)
 	assert.Equal(t, IETF, uuid.Variant())
 	assert.Equal(t, TimebasedVer1, uuid.Version())
 	assert.Equal(t, int64(0), uuid.UnixTimeMillis())
-	assert.Equal(t, uint64(0x138140001dd211b2), uuid.mostSigBits)
-	assert.Equal(t, uint64(0x8d450774f5ba30c5), uuid.leastSigBits)
+	assert.Equal(t, uint64(0x138140001dd211b2), uuid.MostSigBits)
+	assert.Equal(t, uint64(0x8d450774f5ba30c5), uuid.LeastSigBits)
 
 	assertMarshalText(t, uuid)
 	assertMarshalJson(t, uuid)
@@ -258,8 +258,8 @@ func testNamebasedUUID(t *testing.T) {
 
 	assert.Equal(t, IETF, uuid.Variant())
 	assert.Equal(t, NamebasedVer3, uuid.Version())
-	assert.Equal(t, uint64(0x534b44a19bf13d20), uuid.mostSigBits)
-	assert.Equal(t, uint64(0xb71ecc4eb77c572f), uuid.leastSigBits)
+	assert.Equal(t, uint64(0x534b44a19bf13d20), uuid.MostSigBits)
+	assert.Equal(t, uint64(0xb71ecc4eb77c572f), uuid.LeastSigBits)
 
 	assert.Equal(t, "534b44a1-9bf1-3d20-b71e-cc4eb77c572f", uuid.String())
 
@@ -284,8 +284,8 @@ func assertMarshalText(t *testing.T, uuid UUID) {
 		t.Fatal("fail to MarshalText ", err)
 	}
 
-	assert.Equal(t, uuid.mostSigBits, actual.mostSigBits)
-	assert.Equal(t, uuid.leastSigBits, actual.leastSigBits)
+	assert.Equal(t, uuid.MostSigBits, actual.MostSigBits)
+	assert.Equal(t, uuid.LeastSigBits, actual.LeastSigBits)
 
 }
 
@@ -304,8 +304,8 @@ func assertMarshalJson(t *testing.T, uuid UUID) {
 		t.Fatal("fail to UnmarshalJson ", err)
 	}
 
-	assert.Equal(t, uuid.mostSigBits, actual.mostSigBits)
-	assert.Equal(t, uuid.leastSigBits, actual.leastSigBits)
+	assert.Equal(t, uuid.MostSigBits, actual.MostSigBits)
+	assert.Equal(t, uuid.LeastSigBits, actual.LeastSigBits)
 
 }
 func assertMarshalBinary(t *testing.T, uuid UUID) {
@@ -323,8 +323,8 @@ func assertMarshalBinary(t *testing.T, uuid UUID) {
 		t.Fatal("fail to UnmarshalBinary ", err)
 	}
 
-	assert.Equal(t, uuid.mostSigBits, actual.mostSigBits)
-	assert.Equal(t, uuid.leastSigBits, actual.leastSigBits)
+	assert.Equal(t, uuid.MostSigBits, actual.MostSigBits)
+	assert.Equal(t, uuid.LeastSigBits, actual.LeastSigBits)
 
 }
 
@@ -343,7 +343,7 @@ func assertMarshalSortableBinary(t *testing.T, uuid UUID) {
 		t.Fatal("fail to UnmarshalSortableBinary ", err)
 	}
 
-	assert.Equal(t, uuid.mostSigBits, actual.mostSigBits)
-	assert.Equal(t, uuid.leastSigBits, actual.leastSigBits)
+	assert.Equal(t, uuid.MostSigBits, actual.MostSigBits)
+	assert.Equal(t, uuid.LeastSigBits, actual.LeastSigBits)
 
 }
