@@ -8,8 +8,8 @@ package uuid_test
 import (
 	"bytes"
 	"fmt"
-	"go.arpabet.com/uuid"
 	"github.com/stretchr/testify/assert"
+	"go.arpabet.com/uuid"
 	"math/rand"
 	"testing"
 	"time"
@@ -55,6 +55,34 @@ func testParser(t *testing.T) {
 	}
 
 	assert.True(t, id.Equal(comp))
+
+	str := id.String()
+
+	// valid wrappers must be accepted
+	for _, valid := range []string{
+		str,
+		"{" + str + "}",
+		"\"" + str + "\"",
+		"urn:uuid:" + str,
+		"534b44a19bf13d20b71ecc4eb77c572f",
+	} {
+		if _, err := uuid.Parse(valid); err != nil {
+			t.Fatalf("expected %q to parse, got %v", valid, err)
+		}
+	}
+
+	// invalid input must be rejected with an error, not silently zeroed
+	for _, invalid := range []string{
+		"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",        // 32 chars, not hex
+		"X534b44a1-9bf1-3d20-b71e-cc4eb77c572fX",  // wrong wrapper chars
+		"{534b44a1-9bf1-3d20-b71e-cc4eb77c572f\"", // mismatched wrapper
+		"534b44a1+9bf1-3d20-b71e-cc4eb77c572f",    // wrong separator
+		"",                                        // empty
+	} {
+		if _, err := uuid.Parse(invalid); err == nil {
+			t.Fatalf("expected %q to fail parsing, got no error", invalid)
+		}
+	}
 
 }
 
@@ -143,9 +171,9 @@ func testTimebasedUUID(t *testing.T) {
 	assert.Equal(t, int64(0), id.Time100Nanos())
 	assert.Equal(t, uuid.TimebasedVer1, id.Version())
 
-   // test Milliseconds
-   id.SetUnixTimeMillis(1)
-   assert.Equal(t, int64(1), id.UnixTimeMillis())
+	// test Milliseconds
+	id.SetUnixTimeMillis(1)
+	assert.Equal(t, int64(1), id.UnixTimeMillis())
 
 	// test Negative Milliseconds
 	id.SetUnixTimeMillis(-1)
@@ -162,13 +190,12 @@ func testTimebasedUUID(t *testing.T) {
 	id.SetMinCounter()
 	fmt.Print("min=", id.String(), "\n")
 	fmt.Printf("counter=%x\n", id.Counter())
-    binMin, _ := id.MarshalSortableBinary()
+	binMin, _ := id.MarshalSortableBinary()
 
 	id.SetMaxCounter()
 	fmt.Print("max=", id.String(), "\n")
 	fmt.Printf("counter=%x\n", id.Counter())
 	binMax, _ := id.MarshalSortableBinary()
-
 
 	for i := 1; i != 100; i = i + 1 {
 
@@ -176,7 +203,7 @@ func testTimebasedUUID(t *testing.T) {
 		id.SetCounter(anyNumber)
 
 		binLesser, _ := id.MarshalSortableBinary()
-		id.SetCounter(anyNumber+1)
+		id.SetCounter(anyNumber + 1)
 
 		binGreater, _ := id.MarshalSortableBinary()
 
@@ -192,7 +219,7 @@ func testTimebasedUUID(t *testing.T) {
 	id.SetTime(current)
 	cnt := id.SetCounter(rand.Int63())
 
-	assert.Equal(t, current.UnixNano() / 100, id.Time().UnixNano() / 100)
+	assert.Equal(t, current.UnixNano()/100, id.Time().UnixNano()/100)
 	assert.Equal(t, cnt, id.Counter())
 
 	assertMarshalText(t, id)
@@ -270,7 +297,6 @@ func assertMarshalText(t *testing.T, id uuid.UUID) {
 	assert.Equal(t, id.MostSigBits, actual.MostSigBits)
 	assert.Equal(t, id.LeastSigBits, actual.LeastSigBits)
 
-
 }
 
 func assertMarshalJson(t *testing.T, id uuid.UUID) {
@@ -291,7 +317,6 @@ func assertMarshalJson(t *testing.T, id uuid.UUID) {
 	assert.Equal(t, id.MostSigBits, actual.MostSigBits)
 	assert.Equal(t, id.LeastSigBits, actual.LeastSigBits)
 
-
 }
 func assertMarshalBinary(t *testing.T, id uuid.UUID) {
 
@@ -310,7 +335,6 @@ func assertMarshalBinary(t *testing.T, id uuid.UUID) {
 
 	assert.Equal(t, id.MostSigBits, actual.MostSigBits)
 	assert.Equal(t, id.LeastSigBits, actual.LeastSigBits)
-
 
 }
 
@@ -331,6 +355,5 @@ func assertMarshalSortableBinary(t *testing.T, id uuid.UUID) {
 
 	assert.Equal(t, id.MostSigBits, actual.MostSigBits)
 	assert.Equal(t, id.LeastSigBits, actual.LeastSigBits)
-
 
 }
