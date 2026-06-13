@@ -82,6 +82,8 @@ const (
 	NamebasedVer3
 	RandomlyGeneratedVer4
 	NamebasedVer5
+	ReorderedTimeVer6 // RFC 9562 reordered Gregorian time, sortable
+	UnixTimeVer7      // RFC 9562 Unix Epoch time, sortable
 	UnknownVersion
 )
 
@@ -850,6 +852,10 @@ func (v Version) String() string {
 		return "RandomlyGeneratedVer4"
 	case NamebasedVer5:
 		return "NamebasedVer5"
+	case ReorderedTimeVer6:
+		return "ReorderedTimeVer6"
+	case UnixTimeVer7:
+		return "UnixTimeVer7"
 	}
 	return fmt.Sprintf("BadVersion%d", int(v))
 }
