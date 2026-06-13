@@ -73,11 +73,18 @@ func testParser(t *testing.T) {
 
 	// invalid input must be rejected with an error, not silently zeroed
 	for _, invalid := range []string{
-		"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",        // 32 chars, not hex
-		"X534b44a1-9bf1-3d20-b71e-cc4eb77c572fX",  // wrong wrapper chars
-		"{534b44a1-9bf1-3d20-b71e-cc4eb77c572f\"", // mismatched wrapper
-		"534b44a1+9bf1-3d20-b71e-cc4eb77c572f",    // wrong separator
-		"",                                        // empty
+		"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",              // 32 chars, not hex
+		"X534b44a1-9bf1-3d20-b71e-cc4eb77c572fX",        // wrong wrapper chars
+		"{534b44a1-9bf1-3d20-b71e-cc4eb77c572f\"",       // mismatched wrapper
+		"534b44a1+9bf1-3d20-b71e-cc4eb77c572f",          // wrong separator
+		"zzzzzzzz-9bf1-3d20-b71e-cc4eb77c572f",          // invalid hex in group 1
+		"534b44a1-zzzz-3d20-b71e-cc4eb77c572f",          // invalid hex in group 2
+		"534b44a1-9bf1-zzzz-b71e-cc4eb77c572f",          // invalid hex in group 3
+		"534b44a1-9bf1-3d20-zzzz-cc4eb77c572f",          // invalid hex in group 4
+		"534b44a1-9bf1-3d20-b71e-zzzzzzzzzzzz",          // invalid hex in group 5
+		"urn:uuid:zzzzzzzz-9bf1-3d20-b71e-cc4eb77c572f", // urn with invalid hex
+		"abc:uuid:534b44a1-9bf1-3d20-b71e-cc4eb77c572f", // bad urn prefix
+		"", // empty
 	} {
 		if _, err := uuid.Parse(invalid); err == nil {
 			t.Fatalf("expected %q to fail parsing, got no error", invalid)

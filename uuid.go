@@ -672,7 +672,14 @@ Parses string representation of UUID
 */
 
 func Parse(s string) (UUID, error) {
-	return ParseBytes([]byte(s))
+	// the longest accepted form is the 45 character urn:uuid: representation;
+	// copy into a stack buffer to avoid heap allocating the string conversion.
+	if len(s) > 45 {
+		return Empty, fmt.Errorf("invalid UUID length: %q", s)
+	}
+	var buf [45]byte
+	n := copy(buf[:], s)
+	return ParseBytes(buf[:n])
 }
 
 /**
@@ -681,54 +688,66 @@ func Parse(s string) (UUID, error) {
 
 func ParseBytes(src []byte) (UUID, error) {
 
-	for {
+	switch len(src) {
 
-		switch len(src) {
-
-		// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-		case 36:
-			if src[8] != '-' || src[13] != '-' || src[18] != '-' || src[23] != '-' {
-				return Empty, fmt.Errorf("invalid UUID format: %q", src)
-			}
-			var trunc [32]byte
-			copy(trunc[:8], src[:8])
-			copy(trunc[8:12], src[9:13])
-			copy(trunc[12:16], src[14:18])
-			copy(trunc[16:20], src[19:23])
-			copy(trunc[20:], src[24:36])
-			src = trunc[:]
-
-			// urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-		case 36 + 9:
-			if !bytes.Equal(bytes.ToLower(src[:9]), []byte("urn:uuid:")) {
-				return Empty, fmt.Errorf("invalid urn prefix in %q", src)
-			}
-			src = src[9:]
-
-			// {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} or "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" or similar
-		case 36 + 2:
-			switch {
-			case src[0] == '{' && src[37] == '}':
-			case src[0] == '"' && src[37] == '"':
-			default:
-				return Empty, fmt.Errorf("invalid UUID wrapper in %q", src)
-			}
-			src = src[1:37]
-
-			// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-		case 32:
-			var data [16]byte
-			if _, err := hex.Decode(data[:], src); err != nil {
-				return Empty, fmt.Errorf("invalid UUID format: %q: %w", src, err)
-			}
-			var uuid UUID
-			err := uuid.UnmarshalBinary(data[:])
-			return uuid, err
-
-		default:
-			return Empty, fmt.Errorf("invalid UUID length: %q", src)
+	// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+	case 36:
+		if src[8] != '-' || src[13] != '-' || src[18] != '-' || src[23] != '-' {
+			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
 		}
+		var data [16]byte
+		if _, e1 := hex.Decode(data[0:4], src[0:8]); e1 != nil {
+			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+		}
+		if _, e2 := hex.Decode(data[4:6], src[9:13]); e2 != nil {
+			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+		}
+		if _, e3 := hex.Decode(data[6:8], src[14:18]); e3 != nil {
+			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+		}
+		if _, e4 := hex.Decode(data[8:10], src[19:23]); e4 != nil {
+			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+		}
+		if _, e5 := hex.Decode(data[10:16], src[24:36]); e5 != nil {
+			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+		}
+		return fromBytes(data), nil
 
+	// urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+	case 36 + 9:
+		if !bytes.EqualFold(src[:9], []byte("urn:uuid:")) {
+			return Empty, fmt.Errorf("invalid urn prefix in %q", string(src))
+		}
+		return ParseBytes(src[9:])
+
+	// {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} or "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+	case 36 + 2:
+		switch {
+		case src[0] == '{' && src[37] == '}':
+		case src[0] == '"' && src[37] == '"':
+		default:
+			return Empty, fmt.Errorf("invalid UUID wrapper in %q", string(src))
+		}
+		return ParseBytes(src[1:37])
+
+	// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+	case 32:
+		var data [16]byte
+		if _, err := hex.Decode(data[:], src); err != nil {
+			return Empty, fmt.Errorf("invalid UUID format: %q: %w", string(src), err)
+		}
+		return fromBytes(data), nil
+
+	default:
+		return Empty, fmt.Errorf("invalid UUID length: %q", string(src))
+	}
+}
+
+// fromBytes builds a UUID from a decoded 16 byte big-endian representation.
+func fromBytes(data [16]byte) UUID {
+	return UUID{
+		MostSigBits:  binary.BigEndian.Uint64(data[:]),
+		LeastSigBits: binary.BigEndian.Uint64(data[8:]),
 	}
 }
 
@@ -762,10 +781,9 @@ func (this UUID) MarshalTextTo(dst []byte) error {
 		return ErrorWrongLen
 	}
 
-	data, err := this.MarshalBinary()
-	if err != nil {
-		return err
-	}
+	var data [16]byte
+	binary.BigEndian.PutUint64(data[:], this.MostSigBits)
+	binary.BigEndian.PutUint64(data[8:], this.LeastSigBits)
 
 	hex.Encode(dst, data[:4])
 	dst[8] = '-'
@@ -824,8 +842,9 @@ func (this UUID) MarshalJSON() ([]byte, error) {
 */
 
 func (this UUID) String() string {
-	dst, _ := this.MarshalText()
-	return string(dst)
+	var buf [36]byte
+	this.MarshalTextTo(buf[:])
+	return string(buf[:])
 }
 
 /**
@@ -833,7 +852,10 @@ Gets URN name of the UUID
 */
 
 func (this UUID) URN() string {
-	return "urn:uuid:" + this.String()
+	var buf [45]byte
+	copy(buf[:9], "urn:uuid:")
+	this.MarshalTextTo(buf[9:])
+	return string(buf[:])
 }
 
 /**
