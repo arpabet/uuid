@@ -121,8 +121,8 @@ Gets the Unix timestamp in milliseconds from a version 7 UUID.
 Valid only for version 7.
 */
 
-func (this UUID) UnixTimeMillisV7() int64 {
-	return int64(this.MostSigBits >> 16)
+func (u UUID) UnixTimeMillisV7() int64 {
+	return int64(u.MostSigBits >> 16)
 }
 
 /**
@@ -131,6 +131,6 @@ Gets the time encoded in a version 7 UUID.
 Valid only for version 7.
 */
 
-func (this UUID) TimeV7() time.Time {
-	return time.UnixMilli(this.UnixTimeMillisV7())
+func (u UUID) TimeV7() time.Time {
+	return time.UnixMilli(u.UnixTimeMillisV7())
 }

@@ -91,8 +91,8 @@ const (
 Compare two required values of UUID
 */
 
-func (this UUID) Equal(other UUID) bool {
-	return this.MostSigBits == other.MostSigBits && this.LeastSigBits == other.LeastSigBits
+func (u UUID) Equal(other UUID) bool {
+	return u.MostSigBits == other.MostSigBits && u.LeastSigBits == other.LeastSigBits
 }
 
 /**
@@ -137,32 +137,32 @@ func Create(MostSigBits, LeastSigBits int64) (uuid UUID) {
 Gets most significant bits as long
 */
 
-func (this UUID) MostSignificantBits() int64 {
-	return int64(this.MostSigBits)
+func (u UUID) MostSignificantBits() int64 {
+	return int64(u.MostSigBits)
 }
 
 /**
 Sets most significant bits from long
 */
 
-func (this *UUID) SetMostSignificantBits(MostSigBits int64) {
-	this.MostSigBits = uint64(MostSigBits)
+func (u *UUID) SetMostSignificantBits(MostSigBits int64) {
+	u.MostSigBits = uint64(MostSigBits)
 }
 
 /**
 Gets least significant bits as long
 */
 
-func (this UUID) LeastSignificantBits() int64 {
-	return int64(this.LeastSigBits)
+func (u UUID) LeastSignificantBits() int64 {
+	return int64(u.LeastSigBits)
 }
 
 /**
 Sets least significant bits from long
 */
 
-func (this *UUID) SetLeastSignificantBits(LeastSigBits int64) {
-	this.LeastSigBits = uint64(LeastSigBits)
+func (u *UUID) SetLeastSignificantBits(LeastSigBits int64) {
+	u.LeastSigBits = uint64(LeastSigBits)
 }
 
 /**
@@ -171,9 +171,9 @@ func (this *UUID) SetLeastSignificantBits(LeastSigBits int64) {
   MarshalBinary implements the encoding.BinaryMarshaler interface.
 */
 
-func (this UUID) MarshalBinary() (dst []byte, err error) {
+func (u UUID) MarshalBinary() (dst []byte, err error) {
 	dst = make([]byte, 16)
-	err = this.MarshalBinaryTo(dst)
+	err = u.MarshalBinaryTo(dst)
 	return dst, err
 
 }
@@ -182,14 +182,14 @@ func (this UUID) MarshalBinary() (dst []byte, err error) {
   Stores UUID in to slice
 */
 
-func (this UUID) MarshalBinaryTo(dst []byte) error {
+func (u UUID) MarshalBinaryTo(dst []byte) error {
 
 	if len(dst) < 16 {
 		return ErrorWrongLen
 	}
 
-	binary.BigEndian.PutUint64(dst, this.MostSigBits)
-	binary.BigEndian.PutUint64(dst[8:], this.LeastSigBits)
+	binary.BigEndian.PutUint64(dst, u.MostSigBits)
+	binary.BigEndian.PutUint64(dst[8:], u.LeastSigBits)
 
 	return nil
 }
@@ -200,14 +200,14 @@ func (this UUID) MarshalBinaryTo(dst []byte) error {
   UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
 */
 
-func (this *UUID) UnmarshalBinary(data []byte) error {
+func (u *UUID) UnmarshalBinary(data []byte) error {
 
 	if len(data) < 16 {
 		return ErrorWrongLen
 	}
 
-	this.MostSigBits = binary.BigEndian.Uint64(data)
-	this.LeastSigBits = binary.BigEndian.Uint64(data[8:])
+	u.MostSigBits = binary.BigEndian.Uint64(data)
+	u.LeastSigBits = binary.BigEndian.Uint64(data[8:])
 
 	return nil
 }
@@ -218,9 +218,9 @@ func (this *UUID) UnmarshalBinary(data []byte) error {
   Used only for Time-based UUID
 */
 
-func (this UUID) MarshalSortableBinary() ([]byte, error) {
+func (u UUID) MarshalSortableBinary() ([]byte, error) {
 	dst := make([]byte, 16)
-	err := this.MarshalSortableBinaryTo(dst)
+	err := u.MarshalSortableBinaryTo(dst)
 	return dst, err
 }
 
@@ -236,25 +236,25 @@ func (this UUID) MarshalSortableBinary() ([]byte, error) {
 
 */
 
-func (this UUID) MarshalSortableBinaryTo(dst []byte) error {
+func (u UUID) MarshalSortableBinaryTo(dst []byte) error {
 
 	if len(dst) < 16 {
 		return ErrorWrongLen
 	}
 
-	versionAndTimeHigh := uint16(this.MostSigBits)
+	versionAndTimeHigh := uint16(u.MostSigBits)
 
 	if versionAndTimeHigh&0xF000 != 0x1000 {
 		return ErrorRequiredTimebasedUUID
 	}
 
-	timeMid := uint16(this.MostSigBits >> 16)
-	timeLow := uint32(this.MostSigBits >> 32)
+	timeMid := uint16(u.MostSigBits >> 16)
+	timeLow := uint32(u.MostSigBits >> 32)
 
 	binary.BigEndian.PutUint16(dst, versionAndTimeHigh)
 	binary.BigEndian.PutUint16(dst[2:], timeMid)
 	binary.BigEndian.PutUint32(dst[4:], timeLow)
-	binary.BigEndian.PutUint64(dst[8:], this.LeastSigBits^flipSignedBits)
+	binary.BigEndian.PutUint64(dst[8:], u.LeastSigBits^flipSignedBits)
 
 	return nil
 }
@@ -273,7 +273,7 @@ func (this UUID) MarshalSortableBinaryTo(dst []byte) error {
 
 */
 
-func (this *UUID) UnmarshalSortableBinary(data []byte) error {
+func (u *UUID) UnmarshalSortableBinary(data []byte) error {
 
 	if len(data) < 16 {
 		return ErrorWrongLen
@@ -288,8 +288,8 @@ func (this *UUID) UnmarshalSortableBinary(data []byte) error {
 	timeMid := uint64(binary.BigEndian.Uint16(data[2:]))
 	timeLow := uint64(binary.BigEndian.Uint32(data[4:]))
 
-	this.MostSigBits = (timeLow << 32) | (timeMid << 16) | versionAndTimeHigh
-	this.LeastSigBits = binary.BigEndian.Uint64(data[8:]) ^ flipSignedBits
+	u.MostSigBits = (timeLow << 32) | (timeMid << 16) | versionAndTimeHigh
+	u.LeastSigBits = binary.BigEndian.Uint64(data[8:]) ^ flipSignedBits
 
 	return nil
 }
@@ -330,7 +330,7 @@ func NameUUIDFromBytes(name []byte, version Version) (uuid UUID, err error) {
     Used for authentication purposes
 */
 
-func (this *UUID) SetName(name []byte, version Version) error {
+func (u *UUID) SetName(name []byte, version Version) error {
 
 	switch version {
 
@@ -343,7 +343,7 @@ func (this *UUID) SetName(name []byte, version Version) error {
 		digest[8] &= 0x3f /* clear variant        */
 		digest[8] |= 0x80 /* set to IETF variant  */
 
-		return this.UnmarshalBinary(digest[:])
+		return u.UnmarshalBinary(digest[:])
 
 	case NamebasedVer5:
 
@@ -354,7 +354,7 @@ func (this *UUID) SetName(name []byte, version Version) error {
 		digest[8] &= 0x3f /* clear variant        */
 		digest[8] |= 0x80 /* set to IETF variant  */
 
-		return this.UnmarshalBinary(digest[:])
+		return u.UnmarshalBinary(digest[:])
 
 	default:
 		return errors.Errorf("unknown namebased version: %q", version)
@@ -366,9 +366,9 @@ func (this *UUID) SetName(name []byte, version Version) error {
   Gets version of the UUID
 */
 
-func (this UUID) Version() Version {
+func (u UUID) Version() Version {
 
-	version := int((this.MostSigBits & versionMask) >> 12)
+	version := int((u.MostSigBits & versionMask) >> 12)
 
 	if version >= int(UnknownVersion) {
 		return UnknownVersion
@@ -381,9 +381,9 @@ func (this UUID) Version() Version {
 Gets variant of the UUID
 */
 
-func (this UUID) Variant() Variant {
+func (u UUID) Variant() Variant {
 
-	variant := int((this.LeastSigBits >> 56) & 0xFF)
+	variant := int((u.LeastSigBits >> 56) & 0xFF)
 
 	// This field is composed of a varying number of bits.
 	// 0    x    x   x   Reserved for NCS backward compatibility
@@ -413,8 +413,8 @@ func (this UUID) Variant() Variant {
   valid only for version 1 or 2
 */
 
-func (this UUID) Time100Nanos() int64 {
-	return int64(this.Time100NanosUnsigned())
+func (u UUID) Time100Nanos() int64 {
+	return int64(u.Time100NanosUnsigned())
 }
 
 /**
@@ -425,11 +425,11 @@ func (this UUID) Time100Nanos() int64 {
   valid only for version 1 or 2
 */
 
-func (this UUID) Time100NanosUnsigned() uint64 {
+func (u UUID) Time100NanosUnsigned() uint64 {
 
-	timeHigh := this.MostSigBits & 0x0FFF
-	timeMid := (this.MostSigBits >> 16) & 0xFFFF
-	timeLow := (this.MostSigBits >> 32) & 0xFFFFFFFF
+	timeHigh := u.MostSigBits & 0x0FFF
+	timeMid := (u.MostSigBits >> 16) & 0xFFFF
+	timeLow := (u.MostSigBits >> 32) & 0xFFFFFFFF
 
 	return (timeHigh << 48) | (timeMid << 32) | timeLow
 }
@@ -438,15 +438,15 @@ func (this UUID) Time100NanosUnsigned() uint64 {
 Sets 60-bit time in 100 nanoseconds since midnight, October 15, 1582 UTC.
 */
 
-func (this *UUID) SetTime100Nanos(time100Nanos int64) {
-	this.SetTime100NanosUnsigned(uint64(time100Nanos))
+func (u *UUID) SetTime100Nanos(time100Nanos int64) {
+	u.SetTime100NanosUnsigned(uint64(time100Nanos))
 }
 
 /**
 Sets 60-bit time in 100 nanoseconds since midnight, October 15, 1582 UTC.
 */
 
-func (this *UUID) SetTime100NanosUnsigned(time100Nanos uint64) {
+func (u *UUID) SetTime100NanosUnsigned(time100Nanos uint64) {
 
 	bits := timebasedVersionBits
 
@@ -459,7 +459,7 @@ func (this *UUID) SetTime100NanosUnsigned(time100Nanos uint64) {
 	// timeHigh
 	bits |= (time100Nanos & 0xFFF000000000000) >> 48
 
-	this.MostSigBits = bits
+	u.MostSigBits = bits
 
 }
 
@@ -467,16 +467,16 @@ func (this *UUID) SetTime100NanosUnsigned(time100Nanos uint64) {
 Sets minimum possible 60-bit time value
 */
 
-func (this *UUID) SetMinTime() {
-	this.MostSigBits = timebasedVersionBits
+func (u *UUID) SetMinTime() {
+	u.MostSigBits = timebasedVersionBits
 }
 
 /**
 Sets maximum possible 60-bit time value
 */
 
-func (this *UUID) SetMaxTime() {
-	this.MostSigBits = timebasedVersionBits | maxTimeBits
+func (u *UUID) SetMaxTime() {
+	u.MostSigBits = timebasedVersionBits | maxTimeBits
 }
 
 /**
@@ -485,8 +485,8 @@ Gets timestamp in milliseconds from Time-based UUID
 It is measured in millisecond units in unix time since 1 Jan 1970
 */
 
-func (this UUID) UnixTimeMillis() int64 {
-	return (this.Time100Nanos() - num100NanosSinceUUIDEpoch) / one100NanosInMillis
+func (u UUID) UnixTimeMillis() int64 {
+	return (u.Time100Nanos() - num100NanosSinceUUIDEpoch) / one100NanosInMillis
 }
 
 /**
@@ -495,9 +495,9 @@ func (this UUID) UnixTimeMillis() int64 {
     It is measured in millisecond units in unix time since 1 Jan 1970
 */
 
-func (this *UUID) SetUnixTimeMillis(unixTimeMillis int64) {
+func (u *UUID) SetUnixTimeMillis(unixTimeMillis int64) {
 	time100Nanos := (unixTimeMillis * one100NanosInMillis) + num100NanosSinceUUIDEpoch
-	this.SetTime100Nanos(time100Nanos)
+	u.SetTime100Nanos(time100Nanos)
 }
 
 /**
@@ -506,8 +506,8 @@ Gets timestamp in 100 nanoseconds from Time-based UUID
 It is measured in millisecond units in unix time since 1 Jan 1970
 */
 
-func (this UUID) UnixTime100Nanos() int64 {
-	return this.Time100Nanos() - num100NanosSinceUUIDEpoch
+func (u UUID) UnixTime100Nanos() int64 {
+	return u.Time100Nanos() - num100NanosSinceUUIDEpoch
 }
 
 /**
@@ -516,16 +516,16 @@ func (this UUID) UnixTime100Nanos() int64 {
     It is measured in millisecond units in unix time since 1 Jan 1970
 */
 
-func (this *UUID) SetUnixTime100Nanos(unixTime100Nanos int64) {
-	this.SetTime100Nanos(unixTime100Nanos + num100NanosSinceUUIDEpoch)
+func (u *UUID) SetUnixTime100Nanos(unixTime100Nanos int64) {
+	u.SetTime100Nanos(unixTime100Nanos + num100NanosSinceUUIDEpoch)
 }
 
 /**
 Gets Time from Time-based UUID
 */
 
-func (this UUID) Time() time.Time {
-	unixTime100Nanos := this.UnixTime100Nanos()
+func (u UUID) Time() time.Time {
+	unixTime100Nanos := u.UnixTime100Nanos()
 	return time.Unix(unixTime100Nanos/one100NanosInSecond, (unixTime100Nanos%one100NanosInSecond)*100)
 }
 
@@ -533,11 +533,11 @@ func (this UUID) Time() time.Time {
 Sets Time to Time-based UUID
 */
 
-func (this *UUID) SetTime(t time.Time) {
+func (u *UUID) SetTime(t time.Time) {
 	sec := t.Unix()
 	nsec := int64(t.Nanosecond())
 	one100Nanos := (nsec / 100) % one100NanosInSecond
-	this.SetUnixTime100Nanos(sec*one100NanosInSecond + one100Nanos)
+	u.SetUnixTime100Nanos(sec*one100NanosInSecond + one100Nanos)
 }
 
 /**
@@ -548,8 +548,8 @@ func (this *UUID) SetTime(t time.Time) {
   Does not convert signed to unsigned
 */
 
-func (this UUID) ClockSequence() int {
-	variantAndSequence := this.LeastSigBits >> 48
+func (u UUID) ClockSequence() int {
+	variantAndSequence := u.LeastSigBits >> 48
 	return int(variantAndSequence) & clockSequenceBits
 }
 
@@ -561,9 +561,9 @@ func (this UUID) ClockSequence() int {
     Does not convert signed to unsigned
 */
 
-func (this *UUID) SetClockSequence(clockSequence int) {
+func (u *UUID) SetClockSequence(clockSequence int) {
 	sanitizedSequence := uint64(clockSequence & clockSequenceBits)
-	this.LeastSigBits = (this.LeastSigBits & clockSequenceClearMask) | (sanitizedSequence << 48)
+	u.LeastSigBits = (u.LeastSigBits & clockSequenceClearMask) | (sanitizedSequence << 48)
 }
 
 /**
@@ -576,8 +576,8 @@ func (this *UUID) SetClockSequence(clockSequence int) {
   Does not convert signed to unsigned
 */
 
-func (this UUID) Node() int64 {
-	return int64(this.LeastSigBits) & nodeMask
+func (u UUID) Node() int64 {
+	return int64(u.LeastSigBits) & nodeMask
 }
 
 /**
@@ -588,9 +588,9 @@ func (this UUID) Node() int64 {
     Does not convert signed to unsigned
 */
 
-func (this *UUID) SetNode(node int64) {
+func (u *UUID) SetNode(node int64) {
 	sanitizedNode := uint64(node & nodeMask)
-	this.LeastSigBits = (this.LeastSigBits & nodeClearMask) | sanitizedNode
+	u.LeastSigBits = (u.LeastSigBits & nodeClearMask) | sanitizedNode
 }
 
 /**
@@ -601,8 +601,8 @@ func (this *UUID) SetNode(node int64) {
     Converts from signed values automatically
 */
 
-func (this UUID) Counter() int64 {
-	return int64(this.CounterUnsigned())
+func (u UUID) Counter() int64 {
+	return int64(u.CounterUnsigned())
 }
 
 /**
@@ -613,8 +613,8 @@ func (this UUID) Counter() int64 {
     Converts from signed values automatically
 */
 
-func (this UUID) CounterUnsigned() uint64 {
-	return (this.LeastSigBits ^ flipSignedBits) & counterMask
+func (u UUID) CounterUnsigned() uint64 {
+	return (u.LeastSigBits ^ flipSignedBits) & counterMask
 }
 
 /**
@@ -627,8 +627,8 @@ func (this UUID) CounterUnsigned() uint64 {
     return sanitized value stored in UUID
 */
 
-func (this *UUID) SetCounter(counter int64) int64 {
-	return int64(this.SetCounterUnsigned(uint64(counter)))
+func (u *UUID) SetCounter(counter int64) int64 {
+	return int64(u.SetCounterUnsigned(uint64(counter)))
 }
 
 /**
@@ -641,9 +641,9 @@ func (this *UUID) SetCounter(counter int64) int64 {
     return sanitized value stored in UUID
 */
 
-func (this *UUID) SetCounterUnsigned(counter uint64) uint64 {
+func (u *UUID) SetCounterUnsigned(counter uint64) uint64 {
 	sanitizedCounter := counter & counterMask
-	this.LeastSigBits = (sanitizedCounter | variantIETFBits) ^ flipSignedBits
+	u.LeastSigBits = (sanitizedCounter | variantIETFBits) ^ flipSignedBits
 	return sanitizedCounter
 }
 
@@ -653,8 +653,8 @@ func (this *UUID) SetCounterUnsigned(counter uint64) uint64 {
   Guarantees that in sortable binary block will be first after sorting
 */
 
-func (this *UUID) SetMinCounter() {
-	this.LeastSigBits = minCounterBits | variantIETFBits
+func (u *UUID) SetMinCounter() {
+	u.LeastSigBits = minCounterBits | variantIETFBits
 }
 
 /**
@@ -663,8 +663,8 @@ func (this *UUID) SetMinCounter() {
   Guarantees that in sortable binary block will be last after sorting
 */
 
-func (this *UUID) SetMaxCounter() {
-	this.LeastSigBits = maxCounterBits | variantIETFBits
+func (u *UUID) SetMaxCounter() {
+	u.LeastSigBits = maxCounterBits | variantIETFBits
 }
 
 /**
@@ -755,9 +755,9 @@ func fromBytes(data [16]byte) UUID {
 UnmarshalText implements the encoding.TextUnmarshaler interface.
 */
 
-func (this *UUID) UnmarshalText(data []byte) error {
+func (u *UUID) UnmarshalText(data []byte) error {
 	var err error
-	*this, err = ParseBytes(data)
+	*u, err = ParseBytes(data)
 	return err
 }
 
@@ -765,9 +765,9 @@ func (this *UUID) UnmarshalText(data []byte) error {
   MarshalText implements the encoding.TextMarshaler interface.
 */
 
-func (this UUID) MarshalText() ([]byte, error) {
+func (u UUID) MarshalText() ([]byte, error) {
 	dst := make([]byte, 36)
-	err := this.MarshalTextTo(dst)
+	err := u.MarshalTextTo(dst)
 	return dst, err
 }
 
@@ -775,15 +775,15 @@ func (this UUID) MarshalText() ([]byte, error) {
 Marshal text to preallocated slice
 */
 
-func (this UUID) MarshalTextTo(dst []byte) error {
+func (u UUID) MarshalTextTo(dst []byte) error {
 
 	if len(dst) < 36 {
 		return ErrorWrongLen
 	}
 
 	var data [16]byte
-	binary.BigEndian.PutUint64(data[:], this.MostSigBits)
-	binary.BigEndian.PutUint64(data[8:], this.LeastSigBits)
+	binary.BigEndian.PutUint64(data[:], u.MostSigBits)
+	binary.BigEndian.PutUint64(data[8:], u.LeastSigBits)
 
 	hex.Encode(dst, data[:4])
 	dst[8] = '-'
@@ -801,14 +801,14 @@ func (this UUID) MarshalTextTo(dst []byte) error {
 UnmarshalJSON implements the json.Unmarshaler interface.
 */
 
-func (this *UUID) UnmarshalJSON(data []byte) error {
+func (u *UUID) UnmarshalJSON(data []byte) error {
 	// Ignore null, like in the main JSON package.
 	if string(data) == "null" {
 		return nil
 	}
 	// Fractional seconds are handled implicitly by Parse.
 	var err error
-	*this, err = ParseBytes(data)
+	*u, err = ParseBytes(data)
 	return err
 }
 
@@ -816,12 +816,12 @@ func (this *UUID) UnmarshalJSON(data []byte) error {
 MarshalJSON implements the json.Marshaler interface.
 */
 
-func (this UUID) MarshalJSON() ([]byte, error) {
+func (u UUID) MarshalJSON() ([]byte, error) {
 
 	jsonVal := make([]byte, 36+2)
 	jsonVal[0] = '"'
 	jsonVal[37] = '"'
-	err := this.MarshalTextTo(jsonVal[1:37])
+	err := u.MarshalTextTo(jsonVal[1:37])
 
 	return jsonVal, err
 }
@@ -841,9 +841,9 @@ func (this UUID) MarshalJSON() ([]byte, error) {
 
 */
 
-func (this UUID) String() string {
+func (u UUID) String() string {
 	var buf [36]byte
-	this.MarshalTextTo(buf[:])
+	u.MarshalTextTo(buf[:])
 	return string(buf[:])
 }
 
@@ -851,10 +851,10 @@ func (this UUID) String() string {
 Gets URN name of the UUID
 */
 
-func (this UUID) URN() string {
+func (u UUID) URN() string {
 	var buf [45]byte
 	copy(buf[:9], "urn:uuid:")
-	this.MarshalTextTo(buf[9:])
+	u.MarshalTextTo(buf[9:])
 	return string(buf[:])
 }
 

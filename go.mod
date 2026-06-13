@@ -1,10 +1,10 @@
 module go.arpabet.com/uuid
 
-go 1.17
+go 1.25
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.11.1
 )
 
 require (

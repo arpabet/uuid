@@ -17,8 +17,8 @@ The UUID is stored as its canonical 36 character string representation, which
 is accepted by the native uuid type in PostgreSQL and as CHAR/VARCHAR elsewhere.
 */
 
-func (this UUID) Value() (driver.Value, error) {
-	return this.String(), nil
+func (u UUID) Value() (driver.Value, error) {
+	return u.String(), nil
 }
 
 /**
@@ -28,7 +28,7 @@ Accepts a nil value, the canonical string form (any form supported by Parse),
 a textual byte slice, or a raw 16 byte binary representation.
 */
 
-func (this *UUID) Scan(src interface{}) error {
+func (u *UUID) Scan(src interface{}) error {
 
 	switch v := src.(type) {
 
@@ -43,7 +43,7 @@ func (this *UUID) Scan(src interface{}) error {
 		if err != nil {
 			return err
 		}
-		*this = parsed
+		*u = parsed
 		return nil
 
 	case []byte:
@@ -52,13 +52,13 @@ func (this *UUID) Scan(src interface{}) error {
 		}
 		// a raw binary UUID is exactly 16 bytes; every textual form is longer
 		if len(v) == 16 {
-			return this.UnmarshalBinary(v)
+			return u.UnmarshalBinary(v)
 		}
 		parsed, err := ParseBytes(v)
 		if err != nil {
 			return err
 		}
-		*this = parsed
+		*u = parsed
 		return nil
 
 	default:
