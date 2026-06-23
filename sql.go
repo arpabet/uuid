@@ -7,7 +7,7 @@ package uuid
 
 import (
 	"database/sql/driver"
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 )
 
 /**
@@ -62,6 +62,6 @@ func (u *UUID) Scan(src interface{}) error {
 		return nil
 
 	default:
-		return errors.Errorf("uuid: cannot scan type %T into UUID", src)
+		return xerrors.Errorf("uuid: cannot scan type %T into UUID", src)
 	}
 }

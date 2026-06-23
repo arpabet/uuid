@@ -13,7 +13,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 	"time"
 )
 
@@ -68,8 +68,8 @@ const (
 )
 
 var (
-	ErrorWrongLen              = errors.New("wrong len")
-	ErrorRequiredTimebasedUUID = errors.New("required timebased UUID")
+	ErrorWrongLen              = xerrors.New("wrong len")
+	ErrorRequiredTimebasedUUID = xerrors.New("required timebased UUID")
 )
 
 type Version int
@@ -357,7 +357,7 @@ func (u *UUID) SetName(name []byte, version Version) error {
 		return u.UnmarshalBinary(digest[:])
 
 	default:
-		return errors.Errorf("unknown namebased version: %q", version)
+		return xerrors.Errorf("unknown namebased version: %q", version)
 	}
 
 }
@@ -675,7 +675,7 @@ func Parse(s string) (UUID, error) {
 	// the longest accepted form is the 45 character urn:uuid: representation;
 	// copy into a stack buffer to avoid heap allocating the string conversion.
 	if len(s) > 45 {
-		return Empty, fmt.Errorf("invalid UUID length: %q", s)
+		return Empty, xerrors.Errorf("invalid UUID length: %q", s)
 	}
 	var buf [45]byte
 	n := copy(buf[:], s)
@@ -693,30 +693,30 @@ func ParseBytes(src []byte) (UUID, error) {
 	// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 	case 36:
 		if src[8] != '-' || src[13] != '-' || src[18] != '-' || src[23] != '-' {
-			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+			return Empty, xerrors.Errorf("invalid UUID format: %q", string(src))
 		}
 		var data [16]byte
 		if _, e1 := hex.Decode(data[0:4], src[0:8]); e1 != nil {
-			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+			return Empty, xerrors.Errorf("invalid UUID format: %q", string(src))
 		}
 		if _, e2 := hex.Decode(data[4:6], src[9:13]); e2 != nil {
-			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+			return Empty, xerrors.Errorf("invalid UUID format: %q", string(src))
 		}
 		if _, e3 := hex.Decode(data[6:8], src[14:18]); e3 != nil {
-			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+			return Empty, xerrors.Errorf("invalid UUID format: %q", string(src))
 		}
 		if _, e4 := hex.Decode(data[8:10], src[19:23]); e4 != nil {
-			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+			return Empty, xerrors.Errorf("invalid UUID format: %q", string(src))
 		}
 		if _, e5 := hex.Decode(data[10:16], src[24:36]); e5 != nil {
-			return Empty, fmt.Errorf("invalid UUID format: %q", string(src))
+			return Empty, xerrors.Errorf("invalid UUID format: %q", string(src))
 		}
 		return fromBytes(data), nil
 
 	// urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 	case 36 + 9:
 		if !bytes.EqualFold(src[:9], []byte("urn:uuid:")) {
-			return Empty, fmt.Errorf("invalid urn prefix in %q", string(src))
+			return Empty, xerrors.Errorf("invalid urn prefix in %q", string(src))
 		}
 		return ParseBytes(src[9:])
 
@@ -726,7 +726,7 @@ func ParseBytes(src []byte) (UUID, error) {
 		case src[0] == '{' && src[37] == '}':
 		case src[0] == '"' && src[37] == '"':
 		default:
-			return Empty, fmt.Errorf("invalid UUID wrapper in %q", string(src))
+			return Empty, xerrors.Errorf("invalid UUID wrapper in %q", string(src))
 		}
 		return ParseBytes(src[1:37])
 
@@ -734,12 +734,12 @@ func ParseBytes(src []byte) (UUID, error) {
 	case 32:
 		var data [16]byte
 		if _, err := hex.Decode(data[:], src); err != nil {
-			return Empty, fmt.Errorf("invalid UUID format: %q: %w", string(src), err)
+			return Empty, xerrors.Errorf("invalid UUID format: %q: %w", string(src), err)
 		}
 		return fromBytes(data), nil
 
 	default:
-		return Empty, fmt.Errorf("invalid UUID length: %q", string(src))
+		return Empty, xerrors.Errorf("invalid UUID length: %q", string(src))
 	}
 }
 
